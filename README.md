@@ -97,18 +97,6 @@ nvcc -O2 -arch=sm_75 --maxrregcount=64 matmul_kernels.cu -lcublas -o matmul_benc
 
 ---
 
-## Interview Q&A
-
-**Q: Why does your kernel beat cuBLAS on small matrices?**  
-cuBLAS dispatches different internal kernels based on matrix size. For N ≤ 256, this dispatch overhead exceeds computation time. Our single hand-tuned kernel avoids that overhead entirely.
-
-**Q: What is memory coalescing?**  
-When consecutive threads in a warp access consecutive memory addresses, the GPU combines them into one memory transaction instead of 32. Our tile loads are structured so thread `tx` always reads from column `tx` — consecutive threads, consecutive addresses.
-
-**Q: What does `__syncthreads()` do and why do you need two of them?**  
-`__syncthreads()` is a block-level barrier — no thread passes it until all threads in the block reach it. We need it twice: once after loading (to ensure all threads are done writing to shared mem before anyone reads), and once after computing (to ensure all threads are done reading before anyone overwrites the tile).
-
----
 
 ## Tech stack
 - **Language:** CUDA C++ (C++14)
